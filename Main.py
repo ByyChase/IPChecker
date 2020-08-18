@@ -8,9 +8,7 @@ regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(
             25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$'''
 cont = True
 Program_Folder_Path = str(os.path.expanduser('~/Documents') + '/PythonIPChecker')
-print(Program_Folder_Path)
 
-# Define a function for
 # validate an Ip addess
 def check(IP_Address):
 
@@ -31,8 +29,32 @@ if cont:
     else:
         False
 
+
 if not os.path.exists(Program_Folder_Path):
     os.makedirs(Program_Folder_Path)
+
+#Opening file to ensure it is created
+IP_Address_File = open(Program_Folder_Path + "/IPFile.csv", "w+")
+#Closing it so I can open it in the correct mode
+IP_Address_File.close() 
+#opening it in the correct mode 
+IP_Address_File = open("IPFile.csv", "r+")
+
+
+
+
+
+
+
+
+
+
+
+
+
+#Close File, end program
+IP_Address_File.close()
+
 
 
 
