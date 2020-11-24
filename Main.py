@@ -10,10 +10,13 @@ regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.(
             25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
             25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$'''
 
+IP_Address_Temp = '0'
+
+
 
 #Functions
 
-def main():
+def main(IP_Address_Temp):
 
     IP_Address_Found = 0
     CSV_Header_Names = ['IP Address', 'Owner', 'Date of Registration', 'IP Range Owned', 'Times Found in Emails', 'Blocked']
@@ -33,43 +36,65 @@ def main():
     if cont:
         IP_Address = str(input('Please input an IP address: '))
 
+        if IP_Address.lower == 'exit':
+            exit()
+
         if check(IP_Address):
             pass
 
         else:
             False
 
+    
+    print('\n')
 
-    if not os.path.exists(Program_Folder_Path):
-        os.makedirs(Program_Folder_Path)
-        with open(Program_Folder_Path + "/IPFile.csv", "w") as IP_Address_File:
-            csv_writer = csv.DictWriter(IP_Address_File, fieldnames = CSV_Header_Names)
-            csv_writer.writeheader()
+    if IP_Address_Temp == IP_Address:
+        Check_Same_IP = input("This is the same address you put in right before this. Did you mean to do that? \n\nInput (Yes/No): ")
+        while Check_Same_IP.lower() != 'yes' and Check_Same_IP.lower() != 'no':
+            Check_Same_IP = input("\n\tPlease only input Yes or no: ")
 
-        IP_Address_File.close() 
+        if Check_Same_IP.lower() == 'yes':
+            print("\n")
 
-    #opening it in the correct mode and taking the data into a list
-    with open(Program_Folder_Path + "/IPFile.csv", "r") as IP_Address_File:
-        csv_reader = csv.reader(IP_Address_File) 
-        for line in csv_reader:
-            IP_Address_List.append(line)
+        else:
+            print("\nWe will restart the script then")
+            main(IP_Address_Temp)
 
-        IP_Address_File.close()
+    IP_Address_Temp = IP_Address
+
 
 
     for x in IP_Address_List:
         if x[0] == IP_Address:
             x[4] = int(x[4]) + 1
 
-            print('\n\nThe CSV file has been updated with this found IP address.')
-            Block = input("Are you going to block this IP address? \n\nInput (Yes/No): ")
+            if x[4] == 1:
 
-            while Block != 'yes' and Block != 'YES' and Block != 'Yes' and Block != 'no' and Block != 'NO' and Block != 'No':
-                Block = input("\n\tPlease only input Yes or no: ")
+                print('\n\nThe CSV file has been updated with this found IP address.')
+                Block = input("Are you going to block this IP address? \n\nInput (Yes/No): ")
 
-            if Block == 'Yes' or Block == 'yes' or Block == 'YES':
-                x[5] == '1'
-            IP_Address_Found = 1
+                while Block != 'yes' and Block != 'YES' and Block != 'Yes' and Block != 'no' and Block != 'NO' and Block != 'No':
+                    Block = input("\n\tPlease only input Yes or no: ")
+
+                if Block == 'Yes' or Block == 'yes' or Block == 'YES':
+                    x[5] == '1'
+                IP_Address_Found = 1
+
+                IP_Address_Temp = IP_Address
+
+            else:
+                print('\nThis address has been found ' + str(x[4]) + ' times already')
+                Block = input("Are you going to block this IP address? \n\nInput (Yes/No): ")
+
+                while Block != 'yes' and Block != 'YES' and Block != 'Yes' and Block != 'no' and Block != 'NO' and Block != 'No':
+                    Block = input("\n\tPlease only input Yes or no: ")
+
+                if Block == 'Yes' or Block == 'yes' or Block == 'YES':
+                    x[5] == '1'
+                IP_Address_Found = 1
+
+                IP_Address_Temp = IP_Address
+
 
     if IP_Address_Found == 0:
         IP_data = ipwhois.IPWhois(IP_Address).lookup_rdap()
@@ -108,10 +133,36 @@ def main():
         exit()
 
     else:
-        main()
+        main(IP_Address_Temp)
+
+IP_Address_Temp = '0'
+print(" ___  ___       _______      ___          __   ______        ______  __    __   _______   ______  __  ___  _______  ______")      
+print("|   \/   |     /       |    /   \        |  | |   _  \      /      ||  |  |  | |   ____| /      ||  |/  / |   ____||   _  \ ")    
+print("|  \  /  |    |   (----`   /  ^  \       |  | |  |_)  |    |  ,----'|  |__|  | |  |__   |  ,----'|  '  /  |  |__   |  |_)  | ")   
+print("|  |\/|  |     \   \      /  /_\  \      |  | |   ___/     |  |     |   __   | |   __|  |  |     |    <   |   __|  |      / ")    
+print("|  |  |  | .----)   |    /  _____  \     |  | |  |         |  `----.|  |  |  | |  |____ |  `----.|  .  \  |  |____ |  |\  \----. ")
+print("|__|  |__| |_______/    /__/     \__\    |__| | _|          \______||__|  |__| |_______| \______||__|\__\ |_______|| _| `._____| ")
+print("Please type 'Exit' at anytime to quit the program\n")
 
 
-main()
+
+if not os.path.exists(Program_Folder_Path):
+        os.makedirs(Program_Folder_Path)
+        with open(Program_Folder_Path + "/IPFile.csv", "w") as IP_Address_File:
+            csv_writer = csv.DictWriter(IP_Address_File, fieldnames = CSV_Header_Names)
+            csv_writer.writeheader()
+
+        IP_Address_File.close() 
+
+#opening it in the correct mode and taking the data into a list
+with open(Program_Folder_Path + "/IPFile.csv", "r") as IP_Address_File:
+    csv_reader = csv.reader(IP_Address_File) 
+    for line in csv_reader:
+        IP_Address_List.append(line)
+
+    IP_Address_File.close()
+
+main(IP_Address_Temp)
 
 
 
