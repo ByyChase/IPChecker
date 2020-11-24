@@ -4,10 +4,15 @@ import ipwhois
 cont = True
 Program_Folder_Path = str(os.path.expanduser('~/Documents') + '/PythonIPChecker')
 IP_Address_List = []
-fieldnames = ['IP Address', ]
 IP_Address_Found = 0
-CSV_Header_Names = ['IP Address', 'Owner', 'Date of Registration', 'IP Range Owned', 'Times Found in Emails', 'Blocked']
+regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
+            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
+            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
+            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$'''
+
+
 #Functions
+
 def main():
 
     IP_Address_Found = 0
@@ -37,11 +42,12 @@ def main():
 
     if not os.path.exists(Program_Folder_Path):
         os.makedirs(Program_Folder_Path)
+        with open(Program_Folder_Path + "/IPFile.csv", "w") as IP_Address_File:
+            csv_writer = csv.DictWriter(IP_Address_File, fieldnames = CSV_Header_Names)
+            csv_writer.writeheader()
 
-    #Opening file to ensure it is created
-    IP_Address_File = open(Program_Folder_Path + "/IPFile.csv", "w+")
-    #Closing it so I can open it in the correct mode
-    IP_Address_File.close() 
+        IP_Address_File.close() 
+
     #opening it in the correct mode and taking the data into a list
     with open(Program_Folder_Path + "/IPFile.csv", "r") as IP_Address_File:
         csv_reader = csv.reader(IP_Address_File) 
@@ -86,9 +92,6 @@ def main():
 
     with open(Program_Folder_Path + "/IPFile.csv", "w") as IP_Address_File:
         csv_writer = csv.DictWriter(IP_Address_File, fieldnames = CSV_Header_Names)
-        csv_writer.writeheader()
-
-        CSV_Header_Names = ['IP Address', 'Owner', 'Date of Registration', 'IP Range Owned', 'Times Found in Emails', 'Blocked']
 
         for x in IP_Address_List:
             csv_writer.writerow({'IP Address' : x[0], 'Owner' : x[1], 'Date of Registration' : x[2], 'IP Range Owned' : x[3], 'Times Found in Emails' : x[4], 'Blocked' : x[5]})
@@ -106,14 +109,6 @@ def main():
 
     else:
         main()
-
-
-#Global Variables
-regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
-            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
-            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
-            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$'''
-
 
 
 main()
