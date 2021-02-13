@@ -1,6 +1,122 @@
 import re, os, csv
 import ipwhois
 
+
+#Validate IP Address
+def check(IP_Address):
+
+    # pass the regular expression
+    # and the string in search() method
+    if(re.search(regex, IP_Address)):
+        return True
+
+    else:
+        return False
+
+db = None
+
+
+def load_DB(db_file):
+    """
+    This function is used to load the database at program start.
+    ...
+    Parameters
+    ----------
+    db_file : string
+        The location that the database file should be. It should be located in the root directory of the program
+    ...
+    Returns
+    -------
+    db.cursor() : function
+        This calls the cursor function that returns the cursor for the database
+    """
+
+    global db
+    
+    #Checks to see if the database file exists. If it does not the database will be created 
+    if os.path.isfile('ip_checker.db'):
+
+        try:
+
+            #create connection with the database 
+            db = sqlite3.connect(db_file)
+            logging.info("Database successfully loaded")
+
+        except Exception as e:
+
+            logging.exception("Unable to connect to database, attempting to create database")
+            pass
+    
+    else:
+
+        try:
+
+            #Creates the database files
+            db = sqlite3.connect(db_file)
+            #Calls the create_db method to create the database tables 
+            create_DB(db.cursor())
+
+        except Exception as e:
+
+            logging.exception("Unable to create database, closing program")
+            print("Critial error creating database, see logs for more information.\n\nExiting Program")
+            exit()
+
+    return db.cursor()
+
+def cursor():
+    """
+    This function is used to retreive the database cursor
+    ...
+    Returns
+    -------
+    db.cursor() : function
+        This calls the cursor function that returns the cursor for the database
+    """
+
+    if not db:
+        LoadDB()
+
+    else:
+        return db.cursor()
+
+def commit():
+    """
+    This method is used to commit the database
+    """
+
+    db.commit()
+
+def close():
+    """
+    This method is used to close the database connection
+    """
+
+    db.close()
+
+def create_DB(c):
+
+    try:
+        c.execute("""CREATE TABLE IPADDRESS (
+                        Date text,
+                        Amount real,
+                        UnBudgeted real,
+                        Description text,
+                        IncomeStatement_ID integer PRIMARY KEY,
+                        User_ID int,
+                        foreign key(User_ID) references User(User_ID)
+                        )""")
+
+
+    except Exception as error:
+        print(e)
+    
+    return
+
+
+
+
+
 cont = True
 Program_Folder_Path = str(os.path.expanduser('~/Documents') + '/PythonIPChecker')
 IP_Address_List = []
@@ -15,23 +131,10 @@ IP_Address_Temp = '0'
 
 
 #Functions
-
 def main(IP_Address_Temp):
 
     IP_Address_Found = 0
     CSV_Header_Names = ['IP Address', 'Owner', 'Date of Registration', 'IP Range Owned', 'Times Found in Emails', 'Blocked']
-
-    #Validate IP Address
-    def check(IP_Address):
-
-        # pass the regular expression
-        # and the string in search() method
-        if(re.search(regex, IP_Address)):
-            return True
-
-        else:
-            return False
-
 
     if cont:
         IP_Address = str(input('Please input an IP address: '))
@@ -112,19 +215,6 @@ def main(IP_Address_Temp):
     4 Times Found 
     5 Blocked
 
-    """
-
-
-    with open(Program_Folder_Path + "/IPFile.csv", "w") as IP_Address_File:
-        csv_writer = csv.DictWriter(IP_Address_File, fieldnames = CSV_Header_Names)
-
-        for x in IP_Address_List:
-            csv_writer.writerow({'IP Address' : x[0], 'Owner' : x[1], 'Date of Registration' : x[2], 'IP Range Owned' : x[3], 'Times Found in Emails' : x[4], 'Blocked' : x[5]})
-            
-        IP_Address_File.close()
-
-
-
     Repeat = input("Would you like to add another IP Address? \n\nInput (Yes/No):")
     while Repeat != 'yes' and Repeat != 'YES' and Repeat != 'Yes' and Repeat != 'no' and Repeat != 'NO' and Repeat != 'No':
         Repeat = input("\n\tPlease only input Yes or no: ")
@@ -133,36 +223,19 @@ def main(IP_Address_Temp):
         exit()
 
     else:
-        main(IP_Address_Temp)
+        main()
 
-IP_Address_Temp = '0'
-print(" ___  ___       _______      ___          __   ______        ______  __    __   _______   ______  __  ___  _______  ______")      
-print("|   \/   |     /       |    /   \        |  | |   _  \      /      ||  |  |  | |   ____| /      ||  |/  / |   ____||   _  \ ")    
-print("|  \  /  |    |   (----`   /  ^  \       |  | |  |_)  |    |  ,----'|  |__|  | |  |__   |  ,----'|  '  /  |  |__   |  |_)  | ")   
-print("|  |\/|  |     \   \      /  /_\  \      |  | |   ___/     |  |     |   __   | |   __|  |  |     |    <   |   __|  |      / ")    
-print("|  |  |  | .----)   |    /  _____  \     |  | |  |         |  `----.|  |  |  | |  |____ |  `----.|  .  \  |  |____ |  |\  \----. ")
-print("|__|  |__| |_______/    /__/     \__\    |__| | _|          \______||__|  |__| |_______| \______||__|\__\ |_______|| _| `._____| ")
+
+print(" __   ______        ______  __    __   _______   ______  __  ___  _______  ______")      
+print("|  | |   _  \      /      ||  |  |  | |   ____| /      ||  |/  / |   ____||   _  \ ")    
+print("|  | |  |_)  |    |  ,----'|  |__|  | |  |__   |  ,----'|  '  /  |  |__   |  |_)  | ")   
+print("|  | |   ___/     |  |     |   __   | |   __|  |  |     |    <   |   __|  |      / ")    
+print("|  | |  |         |  `----.|  |  |  | |  |____ |  `----.|  .  \  |  |____ |  |\  \----. ")
+print("|__| |__|          \ _____||__|  |__| |_______| \______||__|\__\ |_______|| _| `._____| ")
 print("Please type 'Exit' at anytime to quit the program\n")
 
 
-
-if not os.path.exists(Program_Folder_Path):
-        os.makedirs(Program_Folder_Path)
-        with open(Program_Folder_Path + "/IPFile.csv", "w") as IP_Address_File:
-            csv_writer = csv.DictWriter(IP_Address_File, fieldnames = CSV_Header_Names)
-            csv_writer.writeheader()
-
-        IP_Address_File.close() 
-
-#opening it in the correct mode and taking the data into a list
-with open(Program_Folder_Path + "/IPFile.csv", "r") as IP_Address_File:
-    csv_reader = csv.reader(IP_Address_File) 
-    for line in csv_reader:
-        IP_Address_List.append(line)
-
-    IP_Address_File.close()
-
-main(IP_Address_Temp)
+main()
 
 
 
