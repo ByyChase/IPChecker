@@ -51,6 +51,14 @@ def load_DB(db_file):
 
     return db.cursor()
 
+def isBlocked(Blocked): 
+
+    if Blocked == "0":
+        return "False"
+
+    else:
+        return "True"
+
 def cursor():
     """
     This function is used to retreive the database cursor
@@ -108,8 +116,8 @@ def commit_ip_address(ip_address, description, ip_range, date, times_found, bloc
 
 def fetch(ip_address):
 
-    statement = "FROM IPADDRESS SELECT * WHERE IP_ADDRESS = ?"
-    ip_address_data = cursor().execute(statement, (ip_address, description, ip_range, date, times_found, blocked)).fetchone()
+    statement = "SELECT * FROM IPADDRESS WHERE IP_ADDRESS = ?"
+    ip_address_data = cursor().execute(statement, (ip_address,)).fetchone()
 
     if ip_address_data: 
         return ip_address_data
@@ -152,17 +160,34 @@ def main():
     
     print('\n')
 
+    try:
+        IP_data = ipwhois.IPWhois(IP_Address).lookup_rdap()
 
-    IP_data = ipwhois.IPWhois(IP_Address).lookup_rdap()
+    except:
+        print("\n\n\t\tLooks like there was an error with the address you entered, lets re run it\n\n")
+        main()
+
     IPList = [IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_date'), IP_data.get('asn_cidr'), '1', '0']
 
-    if fetch(IP_data.get('query')):
+    data = fetch(IP_data.get('query'))
+
+    print(data)
+
+
+    if data != "0":
+
         print("This address has already been added to the database")
+        print("\n\nHere is the info on the info from the IP Address")
+        print("\nIP Address: " + data[0] + "\nIP Range: " + data[2] + "\nDescription: " + data[1] + "\nDate: " + data[3] + "\nTimes Found: " + str(int(data[4]) + 1) + "\nBlocked: " + isBlocked(data[5]))
+        blocked = input("\nAre you going to block this IP address? \n\nInput (Yes or No): ")
+       
+
 
     else:
+
         commit_ip_address(IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_cidr'), IP_data.get('asn_date'), '1', '0')
         print("\n\n------------------------------------------\n|The following entry has been added to the database|\n------------------------------------------: ")
-        print("IP Address: " + IPList[0] + + "\nIP Range: " + IPList[3] + "\nDescription: " + IPList[1] + "\nDate: " + IPList[2]) 
+        print("IP Address: " + IPList[0] + "\nIP Range: " + IPList[3] + "\nDescription: " + IPList[1] + "\nDate: " + IPList[2]) 
         print("\n\nThe IP Address has been added t o the database")
 
 
@@ -176,10 +201,11 @@ def main():
     while Repeat != 'yes' and Repeat != 'YES' and Repeat != 'Yes' and Repeat != 'no' and Repeat != 'NO' and Repeat != 'No':
         Repeat = input("\n\tPlease only input Yes or no: ")
 
-    if Repeat == "no" or Repeat == "NO" or Repeat == "No":
+    if Repeat.lower() == "no":
         exit()
 
     else:
+        print("\n\n")
         main()
 
 
@@ -189,7 +215,7 @@ print("|  | |  |_)  |    |  ,----'|  |__|  | |  |__   |  ,----'|  '  /  |  |__  
 print("|  | |   ___/     |  |     |   __   | |   __|  |  |     |    <   |   __|  |      / ")    
 print("|  | |  |         |  `----.|  |  |  | |  |____ |  `----.|  .  \  |  |____ |  |\  \----. ")
 print("|__| |__|          \ _____||__|  |__| |_______| \______||__|\__\ |_______|| _| `._____| ")
-print("Please type 'Exit' at anytime to quit the program\n")
+print("\nPlease type 'Exit' at anytime to quit the program\n")
 
 try:
     load_DB(os.getcwd() + '/ip_checker.db')
