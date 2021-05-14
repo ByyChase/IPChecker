@@ -1,20 +1,41 @@
 import re, os, csv, sqlite3
 import ipwhois
 
+#Define Global Variables 
+regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
+            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
+            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
+            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$'''
+db = None
 
-#Validate IP Address
+
+
+#--------------------------- Functions -----------------------------------------
+
 def check(IP_Address):
+    """
+    This method is used to check if an IP address is formated correctly. It uses
+    Regex which I do not understand at all and got off of Stack Overflow. It 
+    seems to work so I just don't really touch this method at all.
 
-    # pass the regular expression
-    # and the string in search() method
+    Parameters:
+    -----------
+    IP_Address: String 
+        This string holds an IP address that is entered by the user
+
+    Returns:
+    --------
+    Boolean: 
+        If the IP Address the user entered is formated correctly then True is
+        returned. If it is not correctly formated then False is returned 
+
+    """
+
     if(re.search(regex, IP_Address)):
         return True
 
     else:
         return False
-
-db = None
-
 
 def load_DB(db_file):
     """
@@ -23,7 +44,8 @@ def load_DB(db_file):
     Parameters
     ----------
     db_file : string
-        The location that the database file should be. It should be located in the root directory of the program
+        The location that the database file should be. It should be located in 
+        the root directory of the program
     ...
     Returns
     -------
@@ -33,7 +55,8 @@ def load_DB(db_file):
 
     global db
     
-    #Checks to see if the database file exists. If it does not the database will be created 
+    #Checks to see if the database file exists. If it does not the database 
+    # will be created 
     if os.path.isfile('ip_checker.db'):
 
        
@@ -52,6 +75,21 @@ def load_DB(db_file):
     return db.cursor()
 
 def isBlocked(Blocked): 
+    """
+    This method is used to check to see if an IP Address is blocked or not. This
+    is a very simple method used to save code. 
+
+    Parameters:
+    -----------
+    Blocked: integer
+        This integer holds 0 or 1. 0 for False and 1 for True
+
+    Returns:
+    --------
+    Boolean:
+        If the integer provided is 0, False is returned. If the integer is 1,
+        True is returned 
+    """
 
     if Blocked == "0":
         return "False"
@@ -90,6 +128,15 @@ def close():
     db.close()
 
 def create_DB(c):
+    """
+    This Method is used to create the database. If the database already exists 
+    this method will not run 
+
+    Parameters:
+    -----------
+    c: cursor object 
+        This is the cursor object created for the database. 
+    """
 
     try:
         c.execute("""CREATE TABLE IPADDRESS (
@@ -107,12 +154,36 @@ def create_DB(c):
     
     return
 
-def commit_ip_address(ip_address, description, ip_range, date, times_found, blocked):
+def commit_ip_address(ip_address, description, ip_range, date, times_found, 
+blocked):
+    """
+    This method is used to add a new IP address to the database.
 
-    statement = "INSERT INTO IPADDRESS (IP_ADDRESS, DESCRIPTION, IP_RANGE, DATE, TIMES_FOUND, BLOCKED) VALUES (?, ?, ?, ?, ?, ?)"
-    cursor().execute(statement, (ip_address, description, ip_range, date, times_found, blocked))
+    Parameters:
+    -----------
+    ip_address : String
+        This is a validated string holding an IP address entered by the user
+
+    description : String
+        Description of the IP address from WHO IS search
+
+    ip_range : String
+        The IP range that the IP belongs to 
+
+    date : String
+        Date of initial ownership
+
+    times_found : integer
+        the number of times that the IP address has been run through the program
+
+    """
+    #SQL statement
+    statement = "INSERT INTO IPADDRESS (IP_ADDRESS, DESCRIPTION, IP_RANGE, DATE"
+    + "TIMES_FOUND, BLOCKED) VALUES (?, ?, ?, ?, ?, ?)"
+    #Execute the SQL statement
+    cursor().execute(statement, (ip_address, description, ip_range, date, 
+    times_found, blocked))
     commit()
-
 
 def fetch(ip_address):
 
@@ -125,7 +196,6 @@ def fetch(ip_address):
     else:
         return "0"
 
-
 def update(number, which_number):
 
     if which_number == "1":
@@ -134,18 +204,10 @@ def update(number, which_number):
     elif which_number == "2":
         pass
 
+#----------------------------- Main Code ---------------------------------------
 
-regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
-            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
-            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
-            25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$'''
-
-
-#Functions
 def main():
 
-
-   
     IP_Address = str(input('Please input an IP address: '))
 
     if IP_Address.lower == 'exit':
@@ -180,15 +242,17 @@ def main():
         print("\n\nHere is the info on the info from the IP Address")
         print("\nIP Address: " + data[0] + "\nIP Range: " + data[2] + "\nDescription: " + data[1] + "\nDate: " + data[3] + "\nTimes Found: " + str(int(data[4]) + 1) + "\nBlocked: " + isBlocked(data[5]))
         blocked = input("\nAre you going to block this IP address? \n\nInput (Yes or No): ")
-       
 
-
+        if blocked.lower() == 'yes':
+            print('blocked')
+            
     else:
 
         commit_ip_address(IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_cidr'), IP_data.get('asn_date'), '1', '0')
-        print("\n\n------------------------------------------\n|The following entry has been added to the database|\n------------------------------------------: ")
-        print("IP Address: " + IPList[0] + "\nIP Range: " + IPList[3] + "\nDescription: " + IPList[1] + "\nDate: " + IPList[2]) 
-        print("\n\nThe IP Address has been added t o the database")
+        print("\n\n --------------------------------------------------\n|The following entry has been added to the database|\n --------------------------------------------------\n")
+        print("IP Address:  " + IPList[0] + "\nIP Range:    " + IPList[3] + "\nDescription: " + IPList[1] + "\nDate:        " + IPList[2]) 
+        print("\n\nThe IP Address has been added to the database")
+        blocked = input("\nAre you going to block this IP address? \n\nInput (Yes or No): ")
 
 
     
