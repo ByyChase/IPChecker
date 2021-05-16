@@ -1,5 +1,5 @@
 # IPChecker
-Python program using an SQL database to keep track of IP addresses. This programs intention is to be used to keep track of IP addresses that are known to be commiting phishing attacks. This will allow the tracking of IP addresses and will let you determine if the IP address should be blocked. It will keep track of how many times the address has been seen and if it is blocked or not
+IPChecker is a Python Script that takes advantage of an SQL database to store information on IP addresses. Users can enter an IP address and a WHOIS lookup will get information on that IP address. The script keeps track of how many times that the IP Address has been entered into the script and if the IP Address has been blocked in your system.
 
 ## Requirements ##
 You can install the requirements using the following command:
