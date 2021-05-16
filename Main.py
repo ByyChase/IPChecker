@@ -1,5 +1,6 @@
 import re, os, csv, sqlite3
 import ipwhois
+from tkinter import filedialog
 
 #Define Global Variables 
 regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
@@ -144,7 +145,7 @@ def create_DB(c):
                         DESCRIPTION text,
                         IP_RANGE test,
                         DATE text,
-                        TIMES_FOUND text,
+                        TIMES_FOUND int,
                         BLOCKED text
                         )""")
 
@@ -154,8 +155,7 @@ def create_DB(c):
     
     return
 
-def commit_ip_address(ip_address, description, ip_range, date, times_found, 
-blocked):
+def commit_ip_address(ip_address, description, ip_range, date, times_found, blocked):
     """
     This method is used to add a new IP address to the database.
 
@@ -178,31 +178,67 @@ blocked):
 
     """
     #SQL statement
-    statement = "INSERT INTO IPADDRESS (IP_ADDRESS, DESCRIPTION, IP_RANGE, DATE"
-    + "TIMES_FOUND, BLOCKED) VALUES (?, ?, ?, ?, ?, ?)"
+    statement = "INSERT INTO IPADDRESS (IP_ADDRESS, DESCRIPTION, IP_RANGE, DATE, TIMES_FOUND, BLOCKED) VALUES (?, ?, ?, ?, ?, ?)"
     #Execute the SQL statement
     cursor().execute(statement, (ip_address, description, ip_range, date, 
     times_found, blocked))
     commit()
 
 def fetch(ip_address):
+    """
 
+    This method is used for retreiving the IP address from the datbase. 
+
+    Parameters:
+    -----------
+    ip_address : String
+        This is a validated IP address entered in by the user. It is the primary
+        key in the database. It will be used to fetch all of the data associated
+        with the IP address
+    """
+
+    #SQL statement
     statement = "SELECT * FROM IPADDRESS WHERE IP_ADDRESS = ?"
+    #Execture the SQL statement
     ip_address_data = cursor().execute(statement, (ip_address,)).fetchone()
 
+    #If the IP address is in the database it will return the data associated
     if ip_address_data: 
         return ip_address_data
     
+    #If nothing is returned, 0 is returned
     else:
         return "0"
 
-def update(number, which_number):
+def update(ip_address, description, ip_range, date, times_found, blocked):
+    """
+    This method is used to update the IP Address listing in the database. This 
+    really is only used to update if it is blocked or how many times the IP 
+    address has been found
 
-    if which_number == "1":
-        pass
+    Parameters:
+    -----------
+    ip_address : String
+        This is a validated string holding an IP address entered by the user
 
-    elif which_number == "2":
-        pass
+    description : String
+        Description of the IP address from WHO IS search
+
+    ip_range : String
+        The IP range that the IP belongs to 
+
+    date : String
+        Date of initial ownership
+
+    times_found : integer
+        the number of times that the IP address has been run through the program
+    """
+
+    #SQL statement
+    statement = "UPDATE IPADDRESS SET DESCRIPTION = ?, IP_RANGE = ?, DATE = ?, TIMES_FOUND = ?, BLOCKED = ? WHERE  IP_ADDRESS = ?"
+    #Execute the SQL statement
+    cursor().execute(statement, (description, ip_range, date, times_found, blocked, ip_address))
+    commit()
 
 #----------------------------- Main Code ---------------------------------------
 
@@ -210,23 +246,30 @@ def main():
 
     IP_Address = str(input('Please input an IP address: '))
 
-    if IP_Address.lower == 'exit':
+    if IP_Address.lower() == 'exit':
         exit()
+
+    elif IP_Address.lower() == 'export':
+        print("\n\nexport")
+        main()
 
     if check(IP_Address):
         pass
 
     else:
-        False
+        print("\n\n\t\tLooks like there was an error with the address you entered, lets re run it\n\n")
+        main()
 
     
     print('\n')
 
     try:
+
         IP_data = ipwhois.IPWhois(IP_Address).lookup_rdap()
 
     except:
-        print("\n\n\t\tLooks like there was an error with the address you entered, lets re run it\n\n")
+
+        print("\n\n------------ ERROR ------------\nThere was a problem reaching out to the API\n\Restarting Scriptn\n")
         main()
 
     IPList = [IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_date'), IP_data.get('asn_cidr'), '1', '0']
@@ -240,35 +283,95 @@ def main():
 
         print("This address has already been added to the database")
         print("\n\nHere is the info on the info from the IP Address")
-        print("\nIP Address: " + data[0] + "\nIP Range: " + data[2] + "\nDescription: " + data[1] + "\nDate: " + data[3] + "\nTimes Found: " + str(int(data[4]) + 1) + "\nBlocked: " + isBlocked(data[5]))
-        blocked = input("\nAre you going to block this IP address? \n\nInput (Yes or No): ")
+        TimesFound = data[4] + 1
 
-        if blocked.lower() == 'yes':
-            print('blocked')
+        if isBlocked(data[5]) == "True":
+
+            print("\n-------- THIS ADDRESS HAS BEEN BLOCKED --------")
+
+        print("\nIP Address: " + data[0] + "\nIP Range: " + data[2] + "\nDescription: " + data[1] + "\nDate: " + data[3] + "\nTimes Found: " + str(TimesFound) + "\nBlocked: " + isBlocked(data[5]))
+
+        if isBlocked(data[5]) == 'False':
+
+            blocked = input("\nAre you going to block this IP address? \n\nInput (Yes or No): ")
+
+            while blocked.lower() != 'yes' and blocked.lower() != 'no' and blocked.lower() != 'exit' and blocked.lower() != 'export':
+
+                blocked = input("\nPlease only input an accepted input! \n\nInput (Yes or No): ")
+
+
+            if blocked.lower() == 'yes':
+
+                update(data[0], data[1], data[2], data[3], TimesFound, '1')
+                print('\n\n--------- THE ADDRESS HAS BEEN BLOCKED --------')
+
+            elif blocked.lower() == 'exit':
+
+                exit()
+
+            elif blocked.lower() == 'export':
+
+                print("\n\n export")
+                main()
             
+
+            else:
+
+                print('updating database' + '\n' + str(TimesFound))
+                update(data[0], data[1], data[2], data[3], TimesFound, '0')
+  
     else:
 
-        commit_ip_address(IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_cidr'), IP_data.get('asn_date'), '1', '0')
-        print("\n\n --------------------------------------------------\n|The following entry has been added to the database|\n --------------------------------------------------\n")
+        print("\n ------------------------------------\n| Here is the IP Address Information |\n ------------------------------------\n")
         print("IP Address:  " + IPList[0] + "\nIP Range:    " + IPList[3] + "\nDescription: " + IPList[1] + "\nDate:        " + IPList[2]) 
-        print("\n\nThe IP Address has been added to the database")
+
         blocked = input("\nAre you going to block this IP address? \n\nInput (Yes or No): ")
 
+        while blocked.lower() != 'yes' and blocked.lower() != 'no' and blocked.lower() != 'exit' and blocked.lower() != 'export':
 
-    
+                blocked = input("\nPlease only input an accepted input! \n\nInput (Yes or No): ")
 
-    
+        if blocked.lower() == 'yes':
 
+            commit_ip_address(IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_cidr'), IP_data.get('asn_date'), 1, '1')
+            print('\n\n--------- THE ADDRESS HAS BEEN BLOCKED --------')
 
+        elif blocked.lower() == 'exit':
+
+                exit()
+
+        elif blocked.lower() == 'export':
+
+                print("\n\n export")
+                main()      
+
+        else:
+
+            commit_ip_address(IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_cidr'), IP_data.get('asn_date'), 1, '0')
+
+    print("\n\n ---------------------------------------------\n|The IP Address has been added to the database|\n ---------------------------------------------\n")
  
-    Repeat = input("Would you like to add another IP Address? \n\nInput (Yes/No):")
-    while Repeat != 'yes' and Repeat != 'YES' and Repeat != 'Yes' and Repeat != 'no' and Repeat != 'NO' and Repeat != 'No':
+    Repeat = input("\n\nWould you like to add another IP Address? \n\nInput (Yes/No):")
+
+    while Repeat != 'yes' and Repeat != 'YES' and Repeat != 'Yes' and Repeat != 'no' and Repeat != 'NO' and Repeat != 'No' and Repeat.lower() != 'exit' and Repeat.lower() != 'export':
+        
         Repeat = input("\n\tPlease only input Yes or no: ")
 
     if Repeat.lower() == "no":
+
         exit()
 
+    elif Repeat.lower() == "exit":
+
+        exit()
+        main()
+
+    elif Repeat.lower() == "export":
+
+        print("\n\nexport")
+
     else:
+
         print("\n\n")
         main()
 
@@ -279,7 +382,9 @@ print("|  | |  |_)  |    |  ,----'|  |__|  | |  |__   |  ,----'|  '  /  |  |__  
 print("|  | |   ___/     |  |     |   __   | |   __|  |  |     |    <   |   __|  |      / ")    
 print("|  | |  |         |  `----.|  |  |  | |  |____ |  `----.|  .  \  |  |____ |  |\  \----. ")
 print("|__| |__|          \ _____||__|  |__| |_______| \______||__|\__\ |_______|| _| `._____| ")
-print("\nPlease type 'Exit' at anytime to quit the program\n")
+print("\n\n\n----------------------------- PROGRAM SUB-OPTIONS -----------------------------\n")
+print("Type 'Export' at any time to see all IP Addresses in the database")
+print("Type 'Exit' at any time to quit the program\n\n")
 
 try:
     load_DB(os.getcwd() + '/ip_checker.db')
