@@ -3,12 +3,13 @@ IPChecker is a Python Script that takes advantage of an SQL database to store in
 
 ## Requirements ##
 IPChecker required `Python 3` and `PIP` 
-###Windows###
+##Windows##
 You can run the `install_requirements.bat` file to install the requirements
 
-###Linux###
+##Linux##
 You can install the requirements using the following command:
 `pip install -r requirements.txt`
+
 
 ## Running the App ##
 You can run the app using the following command:
