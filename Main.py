@@ -1,6 +1,7 @@
 import re, os, csv, sqlite3
 import ipwhois
-from tkinter import filedialog
+from tkinter import Tk
+from tkinter.filedialog import askdirectory
 
 #Define Global Variables 
 regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
@@ -240,6 +241,63 @@ def update(ip_address, description, ip_range, date, times_found, blocked):
     cursor().execute(statement, (description, ip_range, date, times_found, blocked, ip_address))
     commit()
 
+def fetch_all():
+
+    #SQL statement
+    statement = "SELECT * FROM IPADDRESS"
+    #Execture the SQL statement
+    ip_address_data = cursor().execute(statement).fetchall()
+
+    if ip_address_data:
+        return ip_address_data
+
+    else:
+        return '0'
+
+def export():
+
+    user_export_choice = input('\n\n--------- Would you like to export the report to the terminal or to a csv? --------- \n\n1) Terminal\n2) CSV File\n\nYour Input: ')
+
+    while user_export_choice.lower() != '1' and user_export_choice.lower() != '2' and user_export_choice.lower() != 'terminal' and user_export_choice.lower() != 'csv' and user_export_choice.lower() != 'csv file' and user_export_choice.lower() != 'exit':
+        user_export_choice = input('\n\n--------- Please only select one of the following options? --------- \n\n1) Terminal\n2) CSV File\n\nYour Input: ')
+
+    print("\n\n" + user_export_choice)
+
+    ip_database_data = fetch_all()
+
+    if user_export_choice.lower() == 'terminal' or user_export_choice == "1":
+        print("\n\nIP ADDRESS      IP RANGE              DESCRIPTION/OWNER          DATE AQUIRED     TIMES FOUND     BLOCKED")
+        print("-------------------------------------------------------------------------------------------------------------")
+        for x in ip_database_data:
+
+            print("%-15s %-21s %-26s %-16s %-15s %-7s"% (x[0], x[2], x[1], x[3], x[4], isBlocked(x[5])))
+
+        input("\n\nPlease press any key to continue...")
+        print("\n\n\n----------------------------- PROGRAM SUB-OPTIONS -----------------------------\n")
+        print("Type 'Export' at any time to see all IP Addresses in the database")
+        print("Type 'Exit' at any time to quit the program\n\n")
+
+    elif user_export_choice.lower() == 'csv' or user_export_choice.lower() == '2' or user_export_choice.lower() == "csv file":
+        path = askdirectory(title='Select Folder')
+        try: 
+            with open(path + '/IP_Report.csv', mode='w', newline='') as ip_report_file:
+                employee_writer = csv.writer(ip_report_file)
+
+                employee_writer.writerow(["IP ADDRESS", "IP RANGE", "DESCRIPTION/OWNER", "DATE AQUIRED", "TIMES FOUND", "BLOCKED"])
+
+                for x in ip_database_data:
+                    employee_writer.writerow([x[0], x[2], x[1], x[3], x[4], isBlocked(x[5])])
+
+            print("\n\n ----------------- Report Created -----------------")
+            input("\n\nPlease press any key to continue...")
+            print("\n\n\n----------------------------- PROGRAM SUB-OPTIONS -----------------------------\n")
+            print("Type 'Export' at any time to see all IP Addresses in the database")
+            print("Type 'Exit' at any time to quit the program\n\n")
+
+        except Exception as e:
+            print(e)
+        
+
 #----------------------------- Main Code ---------------------------------------
 
 def main():
@@ -250,7 +308,8 @@ def main():
         exit()
 
     elif IP_Address.lower() == 'export':
-        print("\n\nexport")
+
+        export()
         main()
 
     if check(IP_Address):
@@ -287,7 +346,8 @@ def main():
 
         if isBlocked(data[5]) == "True":
 
-            print("\n-------- THIS ADDRESS HAS BEEN BLOCKED --------")
+            print("\n-------- THIS ADDRESS HAS BEEN BLOCKED ALREADY --------")
+            update(data[0], data[1], data[2], data[3], TimesFound, '1')
 
         print("\nIP Address: " + data[0] + "\nIP Range: " + data[2] + "\nDescription: " + data[1] + "\nDate: " + data[3] + "\nTimes Found: " + str(TimesFound) + "\nBlocked: " + isBlocked(data[5]))
 
@@ -311,7 +371,7 @@ def main():
 
             elif blocked.lower() == 'export':
 
-                print("\n\n export")
+                export()
                 main()
             
 
@@ -334,6 +394,7 @@ def main():
         if blocked.lower() == 'yes':
 
             commit_ip_address(IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_cidr'), IP_data.get('asn_date'), 1, '1')
+            print("\n\n ---------------------------------------------\n|The IP Address has been added to the database|\n ---------------------------------------------\n")
             print('\n\n--------- THE ADDRESS HAS BEEN BLOCKED --------')
 
         elif blocked.lower() == 'exit':
@@ -342,14 +403,15 @@ def main():
 
         elif blocked.lower() == 'export':
 
-                print("\n\n export")
+                export()
                 main()      
 
         else:
 
             commit_ip_address(IP_data.get('query'), IP_data.get('asn_description'), IP_data.get('asn_cidr'), IP_data.get('asn_date'), 1, '0')
+            print("\n\n ---------------------------------------------\n|The IP Address has been added to the database|\n ---------------------------------------------\n")
 
-    print("\n\n ---------------------------------------------\n|The IP Address has been added to the database|\n ---------------------------------------------\n")
+    
  
     Repeat = input("\n\nWould you like to add another IP Address? \n\nInput (Yes/No):")
 
@@ -364,11 +426,11 @@ def main():
     elif Repeat.lower() == "exit":
 
         exit()
-        main()
 
     elif Repeat.lower() == "export":
 
-        print("\n\nexport")
+        export()
+        main()
 
     else:
 
