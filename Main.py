@@ -3,33 +3,31 @@ import ipwhois
 from tkinter import Tk
 from tkinter.filedialog import askdirectory
 
-#Define Global Variables 
+#Define Global Variables
 regex = '''^(25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
             25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
             25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)\.( 
             25[0-5]|2[0-4][0-9]|[0-1]?[0-9][0-9]?)$'''
 db = None
 
-
-
 #--------------------------- Functions -----------------------------------------
 
 def check(IP_Address):
     """
-    This method is used to check if an IP address is formated correctly. It uses
-    Regex which I do not understand at all and got off of Stack Overflow. It 
-    seems to work so I just don't really touch this method at all.
+    This function is used to check if an IP address is formated correctly. It uses
+    Regex which I do not understand at all and got off of Stack Overflow. Its
+    seems to work so I just don't really touch this function at all.
 
     Parameters:
     -----------
-    IP_Address: String 
+    IP_Address : String
         This string holds an IP address that is entered by the user
 
     Returns:
     --------
-    Boolean: 
+    Boolean :
         If the IP Address the user entered is formated correctly then True is
-        returned. If it is not correctly formated then False is returned 
+        returned. If it is not correctly formated then False is returned
 
     """
 
@@ -46,7 +44,7 @@ def load_DB(db_file):
     Parameters
     ----------
     db_file : string
-        The location that the database file should be. It should be located in 
+        The location that the database file should be. It should be located in
         the root directory of the program
     ...
     Returns
@@ -57,20 +55,20 @@ def load_DB(db_file):
 
     global db
     
-    #Checks to see if the database file exists. If it does not the database 
-    # will be created 
+    #Checks to see if the database file exists. If it does not the database
+    # will be created
     if os.path.isfile('ip_checker.db'):
 
        
 
-        #create connection with the database 
+        #create connection with the database
         db = sqlite3.connect(db_file)
     
     else:
 
         #Creates the database files
         db = sqlite3.connect(db_file)
-        #Calls the create_db method to create the database tables 
+        #Calls the create_db function to create the database tables
         create_DB(db.cursor())
 
 
@@ -78,8 +76,8 @@ def load_DB(db_file):
 
 def isBlocked(Blocked): 
     """
-    This method is used to check to see if an IP Address is blocked or not. This
-    is a very simple method used to save code. 
+    This function is used to check to see if an IP Address is blocked or not. This
+    is a very simple function used to save code.
 
     Parameters:
     -----------
@@ -117,27 +115,27 @@ def cursor():
 
 def commit():
     """
-    This method is used to commit the database
+    This function is used to commit the database
     """
 
     db.commit()
 
 def close():
     """
-    This method is used to close the database connection
+    This function is used to close the database connection
     """
 
     db.close()
 
 def create_DB(c):
     """
-    This Method is used to create the database. If the database already exists 
-    this method will not run 
+    This function is used to create the database. If the database already exists
+    this function will not run
 
     Parameters:
     -----------
     c: cursor object 
-        This is the cursor object created for the database. 
+        This is the cursor object created for the database.
     """
 
     try:
@@ -158,7 +156,7 @@ def create_DB(c):
 
 def commit_ip_address(ip_address, description, ip_range, date, times_found, blocked):
     """
-    This method is used to add a new IP address to the database.
+    This function is used to add a new IP address to the database.
 
     Parameters:
     -----------
@@ -181,14 +179,14 @@ def commit_ip_address(ip_address, description, ip_range, date, times_found, bloc
     #SQL statement
     statement = "INSERT INTO IPADDRESS (IP_ADDRESS, DESCRIPTION, IP_RANGE, DATE, TIMES_FOUND, BLOCKED) VALUES (?, ?, ?, ?, ?, ?)"
     #Execute the SQL statement
-    cursor().execute(statement, (ip_address, description, ip_range, date, 
+    cursor().execute(statement, (ip_address, description, ip_range, date,
     times_found, blocked))
     commit()
 
 def fetch(ip_address):
     """
 
-    This method is used for retreiving the IP address from the datbase. 
+    This function is used for retreiving the IP address from the datbase.
 
     Parameters:
     -----------
@@ -213,8 +211,8 @@ def fetch(ip_address):
 
 def update(ip_address, description, ip_range, date, times_found, blocked):
     """
-    This method is used to update the IP Address listing in the database. This 
-    really is only used to update if it is blocked or how many times the IP 
+    This function is used to update the IP Address listing in the database. This
+    really is only used to update if it is blocked or how many times the IP
     address has been found
 
     Parameters:
@@ -226,7 +224,7 @@ def update(ip_address, description, ip_range, date, times_found, blocked):
         Description of the IP address from WHO IS search
 
     ip_range : String
-        The IP range that the IP belongs to 
+        The IP range that the IP belongs to
 
     date : String
         Date of initial ownership
@@ -242,61 +240,112 @@ def update(ip_address, description, ip_range, date, times_found, blocked):
     commit()
 
 def fetch_all():
+    """
+    This method is used to fetch all of the data from the database and returns it for parsing.
+
+    Returns:
+    --------
+
+    ip_address_data : List of lists
+        This list has all of the lists containing the data from the database. It can be used to
+        output the data to the user in any way
+    """
 
     #SQL statement
     statement = "SELECT * FROM IPADDRESS"
     #Execture the SQL statement
     ip_address_data = cursor().execute(statement).fetchall()
 
+    #If there is data it is returned to the user
     if ip_address_data:
         return ip_address_data
 
+    #If there is no data then 0 is returned
     else:
         return '0'
 
 def export():
+    """
+    This function is used to export reports to the user. It gives the user the ability to have a report printed
+    in the terminal or for it to be exported into a csv file.
+    """
 
+    #Asking the user to chose where they want the report to be exported to
     user_export_choice = input('\n\n--------- Would you like to export the report to the terminal or to a csv? --------- \n\n1) Terminal\n2) CSV File\n\nYour Input: ')
 
+    #Validating the users input
     while user_export_choice.lower() != '1' and user_export_choice.lower() != '2' and user_export_choice.lower() != 'terminal' and user_export_choice.lower() != 'csv' and user_export_choice.lower() != 'csv file' and user_export_choice.lower() != 'exit':
         user_export_choice = input('\n\n--------- Please only select one of the following options? --------- \n\n1) Terminal\n2) CSV File\n\nYour Input: ')
 
-    print("\n\n" + user_export_choice)
-
+    #Fetching all of the data from the database
     ip_database_data = fetch_all()
 
-    if user_export_choice.lower() == 'terminal' or user_export_choice == "1":
-        print("\n\nIP ADDRESS      IP RANGE              DESCRIPTION/OWNER          DATE AQUIRED     TIMES FOUND     BLOCKED")
-        print("-------------------------------------------------------------------------------------------------------------")
-        for x in ip_database_data:
+    #Validating that there is data in the database
+    if ip_database_data == '0':
+        #Outputting to the user to say there is no data in the database
+        print("\n\n----------------------- ERROR -----------------------\n")
+        print("Looks like there is no data in the database.")
+        print("Try adding some before trying to export")
 
-            print("%-15s %-21s %-26s %-16s %-15s %-7s"% (x[0], x[2], x[1], x[3], x[4], isBlocked(x[5])))
-
-        input("\n\nPlease press any key to continue...")
+        #Reprinting the options of what the user can do to them
         print("\n\n\n----------------------------- PROGRAM SUB-OPTIONS -----------------------------\n")
         print("Type 'Export' at any time to see all IP Addresses in the database")
         print("Type 'Exit' at any time to quit the program\n\n")
 
+        #restarting the script
+        main()
+
+    #If the users choice is to output it to the terminal, this is run
+    if user_export_choice.lower() == 'terminal' or user_export_choice == "1":
+        #Printing the top of the table with headers 
+        print("\n\nIP ADDRESS      IP RANGE              DESCRIPTION/OWNER          DATE AQUIRED     TIMES FOUND     BLOCKED")
+        print("-------------------------------------------------------------------------------------------------------------")
+
+        #For loop going through all of the entries in the database
+        for x in ip_database_data:
+
+            #Printing the data in a formated fashion to match the table
+            print("%-15s %-21s %-26s %-16s %-15s %-7s"% (x[0], x[2], x[1], x[3], x[4], isBlocked(x[5])))
+
+        #Allowing for the user to view the table before continuing
+        input("\n\nPlease press any key to continue...")
+
+        #Reprinting the options of what the user can do to them
+        print("\n\n\n----------------------------- PROGRAM SUB-OPTIONS -----------------------------\n")
+        print("Type 'Export' at any time to see all IP Addresses in the database")
+        print("Type 'Exit' at any time to quit the program\n\n")
+
+    #If the user selects to output to a csv this option is run
     elif user_export_choice.lower() == 'csv' or user_export_choice.lower() == '2' or user_export_choice.lower() == "csv file":
+        #This uses a GUI to ask the user for the folder they want their report put into
         path = askdirectory(title='Select Folder')
+
+        #TTrying to open and write to the file
         try: 
+            #Creating/Opening the file to write the report in
             with open(path + '/IP_Report.csv', mode='w', newline='') as ip_report_file:
+                #Creating the CSV writer
                 employee_writer = csv.writer(ip_report_file)
 
+                #Writing the headers
                 employee_writer.writerow(["IP ADDRESS", "IP RANGE", "DESCRIPTION/OWNER", "DATE AQUIRED", "TIMES FOUND", "BLOCKED"])
 
+                #Writing all the other rows from the database
                 for x in ip_database_data:
                     employee_writer.writerow([x[0], x[2], x[1], x[3], x[4], isBlocked(x[5])])
 
+            #Outputting to the user
             print("\n\n ----------------- Report Created -----------------")
+            #Waiting for the user to want to move on
             input("\n\nPlease press any key to continue...")
+            #Reprinting the program sub options to the user
             print("\n\n\n----------------------------- PROGRAM SUB-OPTIONS -----------------------------\n")
             print("Type 'Export' at any time to see all IP Addresses in the database")
             print("Type 'Exit' at any time to quit the program\n\n")
 
+        #Catching any errors and outputting the error if there is one
         except Exception as e:
             print(e)
-        
 
 #----------------------------- Main Code ---------------------------------------
 
@@ -438,10 +487,10 @@ def main():
         main()
 
 
-print(" __   ______        ______  __    __   _______   ______  __  ___  _______  ______")      
-print("|  | |   _  \      /      ||  |  |  | |   ____| /      ||  |/  / |   ____||   _  \ ")    
-print("|  | |  |_)  |    |  ,----'|  |__|  | |  |__   |  ,----'|  '  /  |  |__   |  |_)  | ")   
-print("|  | |   ___/     |  |     |   __   | |   __|  |  |     |    <   |   __|  |      / ")    
+print(" __   ______        ______  __    __   _______   ______  __  ___  _______  ______")
+print("|  | |   _  \      /      ||  |  |  | |   ____| /      ||  |/  / |   ____||   _  \ ")
+print("|  | |  |_)  |    |  ,----'|  |__|  | |  |__   |  ,----'|  '  /  |  |__   |  |_)  | ")
+print("|  | |   ___/     |  |     |   __   | |   __|  |  |     |    <   |   __|  |      / ")
 print("|  | |  |         |  `----.|  |  |  | |  |____ |  `----.|  .  \  |  |____ |  |\  \----. ")
 print("|__| |__|          \ _____||__|  |__| |_______| \______||__|\__\ |_______|| _| `._____| ")
 print("\n\n\n----------------------------- PROGRAM SUB-OPTIONS -----------------------------\n")
@@ -454,8 +503,7 @@ try:
 except Exception as e:
     print("\n\nCould not load Database")
     print("\n\n" + str(e))
-
-
+ 
 main()
 
 
